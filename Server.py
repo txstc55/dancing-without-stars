@@ -1,29 +1,31 @@
-import socket
+from socket import socket
 
-class Server:
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mySocket.bind((self.host, self.port))
-        self.connection = [None, None]
-        self.address = [None, None]
+class Server(object):
+    
+  def __init__(self, host, port):
+    """Init the server, set two sockets for players"""
+    self.socket = socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.socket.bind((host, port))
+    self.sockets = [None, None]
+    self.socket.listen(2)
 
-    def establishConnection(self):
-        self.mySocket.listen(2)
-        print "Waiting for player 0."
-        self.connection[0], self.address[0] = self.mySocket.accept()
-        print "Connection from player 0 established."
-        print "Waiting for player 1."
-        self.connection[1], self.address[1] = self.mySocket.accept()
-        print "Connection from player 1 established."
+  def establish_connection(self):
+    """Waiting for two players to connect."""
+    print("Waiting for Choreographer...")
+    self.sockets[0], _ = self.socket.accept()
+    print("Connection from Choreographer established.")
+    print("Waiting for Spoiler...")
+    self.sockets[1], _ = self.socket.accept()
+    print("Connection from Spoiler established.")
 
-    def send(self, string, player):
-        self.connection[player].sendall(string)
+  def send_all(self, data):
+    """send data to both players"""
+    s.sendall(data) for s in self.sockets
 
-    def receive(self, player):
-        while(1):
-            data = self.connection[player].recv(4096)
-            while not data:
-                continue
-            return data
+  def receive(self, player):
+    """receive data from one player"""
+    return self.sockets[player].recv(4096)
+
+  def __del__(self):
+    self.socket.close()
