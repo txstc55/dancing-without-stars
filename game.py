@@ -1,358 +1,233 @@
-import Server
-import sys
-import socket
-import time
-import copy
-import os
-
-# server
-s = []
-
-#positions of dancers
-red = []
-blue = []
-
-# board with locations of dancers/stars
-board = [[]]
+import sys, socket, time, os
+from Server import Server
+from copy import deepcopy
 
 
-def parse_input(filename):
-	global red
-	global blue
+class Game(object):
 
-	fh = open(filename)
-	file_contents = fh.readlines()
-	
-	adding_red = True
-	
-	for line in file_contents:
-		fields = []
-		line = line.rstrip('\r\n')
+	def __init__(self, host, port, input_file, size, k):
+		"""Initialize game"""
+		# read file input
+		self.file_input, self.dancers = self.__process_input(input_file)
+		# setup board
+		self.board_size = size
+		self.num_color = len(self.dancers)
+		self.board = self.__setup_board(self.dancers, size)
+		self.stars = list()
+		# initialize server
+		self.server, self.choreographer, self.spoiler = self.__setup_server(host, port)
 
-		if line == "Red dancer positions (start at 0)":
-			continue
-		
-		if line == "Blue dancer positions (start at 0)":
-			adding_red = False
-			continue
-		if line == "    ":
-			continue
+	def __setup_server(self, host, port):
+		server = Server(host, port)
+		choreographer, spoiler = server.establish_connection()
+		return server, choreographer, spoiler
 
-		fields = line.split(' ')
-
-		if adding_red:
-			red.append([int(fields[0]), int(fields[1])])
-		else:
-			blue.append([int(fields[0]), int(fields[1])])
-
-def setup_server(port):
-	global s
-
-	s = Server.Server('', port)
-	s.establishConnection()
-
-def setup_board(size):
-	global board
-	
-	board = [['.' for i in range(size)] for j in range(size)]
-	for r in red:
-		board[r[0]][r[1]] = 'R'
-	for b in blue:
-		board[b[0]][b[1]] = 'B'
-
-
-def is_invalid_star(point):
-
-	if point[0] < 0 or point[0] >= len(board) or point[1] < 0 or point[1] >= len(board):
-		return False
-		
-	if board[point[0]][point[1]] == 'S':
-		return True
-
-	return False
-
-# place stars based on spoiler input
-# returns boolean if placement is allowed
-def update_stars(stars):
-	
-	new_star_string = ""
-	star = stars.split()
-	star_count = 0
-	star_locations = []
-	if len(star) > 2*int(sys.argv[4]) or len(star)%2 == 1:
-		print "Need two coordinates per star"
-		return (False, "")
-	i = 0
-	while i < len(star):
-		if int(star[i]) < 0 or int(star[i]) >= len(board) or int(star[i+1]) < 0 or int(star[i+1]) >= len(board):
-			print "Invalid star at {} {}".format(star[0], star[1])
-			return (False, "")
-		elif board[int(star[i])][int(star[i+1])] != '.':
-			print "Invalid star at {} {} -> {}".format(star[i], star[i+1], board[int(star[i])][int(star[i+1])])
-			return (False, "")
-		else:
-			board[int(star[i])][int(star[i+1])] = 'S'
-			star_count += 1
-			star_locations.append([int(star[i]), int(star[i+1])])
-			new_star_string += star[i] + " " + star[i+1] + " "
-		i += 2
-	
-	if star_count > int(sys.argv[4]):
-		print "Added too many stars"
-		return (False, "")
-
-	# check for nearby stars ( <=3 is not ok, >= 4 is ok)
-	for location in star_locations:
-		for i in range(location[0], location[0]+1):
-			if is_invalid_star([i, location[1]-3]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]-1, location[0]+2):
-			if is_invalid_star([i, location[1]-2]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]-2, location[0]+3):
-			if is_invalid_star([i, location[1]-1]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]-3, location[0]):
-			if is_invalid_star([i, location[1]]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]+1, location[0]+4):
-			if is_invalid_star([i, location[1]]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]-2, location[0]+3):
-			if is_invalid_star([i, location[1]+1]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0]-1, location[0]+2):
-			if is_invalid_star([i, location[1]+2]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-		for i in range(location[0], location[0]+1):
-			if is_invalid_star([i, location[1]+3]):
-				print "Star", location[0], location[1], " too close to another star"
-				return (False, "")
-	
-	if new_star_string[-1] == " ":
-		new_star_string = new_star_string[:-1]
-	return (True, new_star_string)
-
-# helper for updating dancer positions
-def is_valid_dancer_move(start, end):
-	if end[0] < 0 or end[0] >= len(board):
-		return False
-	if end[1] < 0 or end[1] >= len(board):
-		return False
-	if (start[0] == end[0] and (abs(end[1] - start[1]) == 1)) or (start[1] == end[1] and (abs(end[0] - start[0]) == 1)):
-		return True
-	if start[0] == end[0] and start[1] == end[1]:
-		return True
-	return False
-			
-# update position of dancers based on choreographer
-def update_dancers(moves):
-	global board
-	global red
-	global blue
-
-	m = moves.split()
-
-	if len(m) % 4 != 0:
-		print "Move list isn't a multiple of 4"
-		return False
-
-	new_board = [['.' for i in range(len(board))] for j in range(len(board))]
-	for i in range(len(board)):
-		for j in range(len(board)):
-			if board[i][j] == 'S':
-				new_board[i][j] = 'S'
-	new_red = []
-	new_blue = []
-	
-	i = 0
-	num_dancers = len(red)
-	
-	while i < len(m):
-		start = [int(m[i]), int(m[i+1])]
-		end = [int(m[i+2]), int(m[i+3])]
-		if not is_valid_dancer_move(start, end):
-			print "Move is not adjacent to starting location"
-			return False
-		if board[start[0]][start[1]] == 'R':
-			if board[end[0]][end[1]] != 'S':
-				new_board[end[0]][end[1]] = 'R'
-				new_red.append([end[0], end[1]])
-				if [start[0], start[1]] in red:
-					red.remove([start[0], start[1]])
-				else:
-					print "Already moved red dancer at location"
-					return False
+	def __process_input(self, filename):
+		"""read in input file"""
+		file_input = open(filename)
+		dancers = list()
+		cur = -1
+		for line in file_input:
+			tokens = line.split()
+			if len(tokens) == 0:
+				continue # skip empty lines
+			elif len(tokens) == 2:
+				dancers[cur].add((int(tokens[0]), int(tokens[1])))
 			else:
-				print "Cannot move red dancer to star"
-				return False
-		elif board[start[0]][start[1]] == 'B':
-			if board[end[0]][end[1]] != 'S':
-				new_board[end[0]][end[1]] = 'B'
-				new_blue.append([end[0], end[1]])
-				if [start[0], start[1]] in blue:
-					blue.remove([start[0], start[1]])
-				else:
-					print "Already moved blue dancer at location"
-					return False
-			else:
-				print "Cannot move blue dancer to star"
-				return False
-		else:
-			print "No dancer at starting location", start
+				cur = int(tokens[len(tokens) - 1]) - 1
+				dancers.append(set())
+		return file_input, dancers
+
+	def __setup_board(self, dancers, size):
+		"""Initialize board"""
+		# fill all the space with 0
+		board = [[0 for i in range(size)] for j in range(size)]
+		# fill in all the dancer with their colors
+		for color in range(len(dancers)):
+			for pos in dancers[color]:
+				board[pos[0]][pos[1]] = color + 1
+		return board
+
+	def __inside_board(self, x, y):
+		"""check if this position is inside board"""
+		if x not in range(self.board_size) or y not in range(self.board_size):
 			return False
-		i += 4
-
-	# copy unmoved pieces over to new state
-	for r in red:
-		new_board[r[0]][r[1]] = 'R'
-		new_red.append(r)
-	for b in blue:
-		new_board[b[0]][b[1]] = 'B'
-		new_blue.append(b)
-		
-	# check if new_board has same number of dancers
-	# such that multiple ones dont go to same spot, while allowing for swapping of dancers
-	red_count = 0
-	blue_count = 0
-	for i in range(len(new_board)):
-		red_count += new_board[i].count('R')
-		blue_count += new_board[i].count('B')
-	if red_count != num_dancers or blue_count != num_dancers:
-		print "Wrong number of dancers at end of step - you probably tried to move two dancers to the same spot"
-		return False
-
-	board = copy.deepcopy(new_board)
-	red = copy.deepcopy(new_red)
-	blue = copy.deepcopy(new_blue)
-	
-	return True
-
-def get_nearby(board, point, dancer):
-
-	nearby = []
-
-	# check top
-	if (point[1] > 0) and board[point[0]][point[1]-1] == dancer:
-		nearby.append([point[0], point[1]-1])
-
-	# check left
-	if (point[0] > 0) and board[point[0]-1][point[1]] == dancer:
-		nearby.append([point[0]-1, point[1]])
-
-	# check right
-	if (point[0] < len(board)-1) and board[point[0]+1][point[1]] == dancer:
-		nearby.append([point[0]+1, point[1]])
-
-	# check bottom
-	if (point[1] < len(board)-1) and board[point[0]][point[1]+1] == dancer:
-		nearby.append([point[0], point[1]+1])
-	
-	return nearby
-
-
-def game_finished(board, red, blue):
-
-	if len(red) == 0 and len(blue) == 0:
 		return True
 
-	for r in red:
-		nearby_blues = get_nearby(board, r, 'B')
-		for nearby_blue in nearby_blues:
-			new_red = copy.deepcopy(red)
-			new_red.remove(r)
-			new_blue = copy.deepcopy(blue)
-			new_blue.remove(nearby_blue)
-			new_board = copy.deepcopy(board)
-			new_board[r[0]][r[1]] = '.'
-			new_board[nearby_blue[0]][nearby_blue[1]] = '.'
+	def __manhattan_distance(self, x1, y1, x2, y2):
+		return abs(x1 - x2) + abs(y1 - y2)
 
-			if game_finished(new_board, new_red, new_blue):
-				return True
-		return False
-	return True
+	def __is_star_valid(self, x, y):
+		"""Check if it is valid to place a start at this position"""
+		if not self.__inside_board(x, y):
+			return False # outside board
+		valid = False
+		if self.board[x][y] == 0:
+			valid = True
+			# check manhattan distance with other stars
+			for s in self.stars:
+				if self.__manhattan_distance(s[0], s[1], x, y) < self.num_color + 1:
+					valid = False # manhattan distance can't smaller than c + 1
+					break
+		return valid
 
-
-
-def print_board():
-	# clear the screen to keep the board be displayed at the same place
-	cmd = "clear"
-	if sys.platform == "win32":
-		cmd = "cls"
-	os.system(cmd)
-	
-	for r in board:
-		for c in r:
-			print c,
-		print ""
-	
-	
-def run_game():
-	
-	s.send("^", 0)
-	start_time = time.time()
-	stars = s.receive(0)
-	s.send("$", 0)
-	if time.time() - start_time > 120:
-		s.send("$", 1)
-		print "Spoiler took longer than 2 minutes, Choreographer wins"
-		return
-	valid, star_string = update_stars(stars)
-	if not valid:
-		s.send("$", 1)
-		print "Invalid placement of stars, Choreographer wins"
-		return
-	print_board()
-
-	first_move = True
-	time_remaining = 120
-	num_moves = 0
-	while 1:
-		if first_move:
-			star_string += "#"
-			s.send(star_string, 1)
-			first_move = False
+	def __is_dancer_move_valid(self, start_x, start_y, end_x, end_y):
+		"""Check if this dancer move is valid"""
+		if not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
+			return False # one of point outside board
+		elif self.board[start_x][start_y] in (0, -1):
+			return False # no dancer at this location
+		elif start_x == end_x and start_y == end_y:
+			return True # no movement
+		elif self.board[end_x][end_y] == -1:
+			return False # there is a star at end location
 		else:
-			s.send("#", 1)
-		start = time.time()
-		
-		c_moves = s.receive(1)
-		
-		time_taken = time.time() - start
-		time_remaining -= time_taken
-		if time_remaining < 0.0:
-			s.send("$", 1)
-			print "Choreographer took longer than 2 minutes, Choreographer loses"
-			return
-		if not update_dancers(c_moves):
-			s.send("$", 1)
-			print "Invalid placement of dancers, Choreographer loses"
-			return
-		if len(sys.argv) > 5:
-			if sys.argv[5]:
-				print_board()
-				time.sleep(1)
-		num_moves += 1
-		if game_finished(board, red, blue):
-			s.send("$", 1)
-			print "Choreographer finished with {} steps".format(num_moves) 
-			break
+			return True
+
+	def __should_game_terminate(self):
+		"""check if the current game is finished"""
+		return self.__is_game_finish(self.board, self.dancers)
+
+	def __check_one_direction(self, start_x, start_y, colorset, x_act, y_act, board, dancers):
+		cur_x = start_x
+		cur_y = start_y
+		while board[cur_x][cur_y] not in (0, -1) and board[cur_x][cur_y] not in colorset:
+			c = board[cur_x][cur_y]
+			colorset.add(c)
+			board[cur_x][cur_y] = 0 # unmark
+			dancers[c-1].remove((cur_x, cur_y)) # remove from set
+			cur_x += x_act
+			cur_y += y_act
+
+	def __is_game_finish(self, board, dancers):
+		"""Check if this game state is finished"""
+		# check if all dancers are removed
+		empty = True
+		index = 0
+		for i in range(len(dancers)):
+			group = dancers[i]
+			index = i
+			if len(group) != 0:
+				empty = False
+				break
+		if empty:
+			return True
+		# not empty, pick one dancer from group
+		start = next(iter(dancers[index]))
+		cur_x = start[0]
+		cur_y = start[1]
+		# check vertically
+		# copy data for recurrisive calls
+		n_dancers = deepcopy(dancers)
+		n_board = deepcopy(board)
+		s = set()
+		# check top first
+		self.__check_one_direction(cur_x, cur_y, s, -1, 0, n_board, n_dancers)
+		# check bot
+		self.__check_one_direction(cur_x+1, cur_y, s, 1, 0, n_board, n_dancers)
+		if len(s) != self.num_color:
+			# now need to check horizontally
+			# create new copies
+			n_dancers = deepcopy(dancers)
+			n_board = deepcopy(board)
+			s = set()
+			self.__check_one_direction(cur_x, cur_y, s, 0, -1, n_board, n_dancers) # check left
+			self.__check_one_direction(cur_x, cur_y+1, s, 0, 1, n_board, n_dancers) # check right
+		if len(s) != self.num_color:
+			return False
 		else:
-			print "Remaining time:", time_remaining
+			return self.__is_game_finish(n_board, n_dancers)
+
+	def __place_stars(self, stars):
+		success = True
+		msg = None
+		for s in stars:
+			if self.__is_star_valid(s[0], s[1]):
+				self.stars.append(s)
+				self.board[s[0]][s[1]] = -1
+			else:
+				success = False
+				msg = "Spoiler placed an invalid star at: " + str(s[0]) + ", " + str(s[1])
+				break
+		return success, msg
+	
+	def __update_dancers(self, moves):
+		success = True
+		msg = None
+		for m in moves:
+			x1 = m[0]
+			y1 = m[1]
+			x2 = m[2]
+			y2 = m[3]
+			if self.__is_dancer_move_valid(x1, y1, x2, y2):
+				# make the move
+				c = self.board[x1][y1] # color
+				if self.board[x2][y2] == 0:
+					self.dancers[c-1].remove((x1, y1))
+					self.dancers[c-1].add((x2, y2))
+				else: # this is a swap
+					t_c = self.board[x2][y2]
+					self.dancers[c-1].remove((x1, y1))
+					self.dancers[c-1].add((x2, y2))
+					self.dancers[t_c-1].remove((x2, y2))
+					self.dancers[t_c-1].add((x1, y1))
+				self.board[x1][y1], self.board[x2][y2] = self.board[x2][y2], self.board[x1][y1] # swap
+			else:
+				success = False
+				msg = "Choreographer made an invalid move from " + str(x1) + ", " + str(y1) \
+				  + " to " + str(x2) + ", " + str(y2)
+				break
+		return success, msg
+
+	def get_board(self):
+		return self.board
+
+	def start_game(self):
+		# send input file to both players
+		self.server.send_all(self.file_input)
+		# now wait for spoiler to send stars
+		start_time = time.time()
+		star_data = self.server.receive(1)
+		end_time = time.time()
+		if time.time() - start_time > 120:
+			print("Spoiler exceeds time limit!")
+			sys.exit()
+		# parse stars
+		s_list = star_data.split()
+		stars = list()
+		for i in range(len(s_list)/2):
+			stars.append((int(s_list[i]), int(s_list[i+1])))
+		# process stars
+		success, msg = self.__place_stars(stars)
+		if not success:
+			print(msg)
+			sys.exit()
+		# send stars to choreographer
+		self.server.send_to(0, star_data)
+		# receive moves from choreographer
+		start_time = time.time()
+		move_data = self.server.receive(0)
+		end_time = time.time()
+		if time.time() - start_time > 120:
+			print("Choreographer exceeds time limit!")
+			sys.exit()
+		# parse move data
+		m_list = move_data.split()
+		moves = list()
+		for i in range(len(m_list)/4):
+			moves.append([int(m_list[i]), int(m_list[i+1]), int(m_list[i+2]), int(m_list[i+3])])
+		# process
+		success, msg = self.__update_dancers(moves)
+		if not success:
+			print(msg)
+			sys.exit()
+		# now check if the game is finished
+		if self.__should_game_terminate():
+			print("Game finished!")
+			print(self.choreographer + " has taken " + len(moves) + " steps.")
+		else:
+			print("Choreographer didn't achieve goal.")
 
 
-if len(sys.argv) < 5:
-	print "python game.py <string:dancer_locations> <int:port_number> <int:board_size> <int:number_of_stars> [bool:print_board]"
-	exit()	
-
-parse_input(sys.argv[1])
-setup_server(int(sys.argv[2]))
-setup_board(int(sys.argv[3]))
-run_game()
+if __name__ == "__main__":
+	game = Game("localhost", 12345, "./sample_dancedata.txt", 400, 40)
