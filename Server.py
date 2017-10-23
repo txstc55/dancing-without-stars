@@ -28,6 +28,10 @@ class Server(object):
     for socket in self.sockets:
       socket.sendall(bytes(data, "utf-8"))
 
+  def send_to(self, player, data):
+    """0: Choreographer; 1: spoiler"""
+    self.sockets[player].sendall(bytes(data, "utf-8"))
+
   def receive(self, player):
     """receive data from one player"""
     return self.sockets[player].recv(4096).decode("utf-8")
