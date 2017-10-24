@@ -36,5 +36,5 @@ class Server(object):
     """receive data from one player"""
     return self.sockets[player].recv(4096).decode("utf-8")
 
-  def __del__(self):
+  def close(self):
     self.socket.close()

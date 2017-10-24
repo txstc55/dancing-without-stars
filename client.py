@@ -17,5 +17,5 @@ class Client(object):
     """receive data from server"""
     return self.socket.recv(4096).decode("utf-8")
 
-  def __del__(self):
+  def close(self):
     self.socket.close()
