@@ -1,56 +1,81 @@
-# dancing_without_stars
+Dancing without Stars
+=====================
 
+## Details
+On a `N x N` checker board, there are `c` groups of dancers in their initial positions. Each group will have a unique color and each group have `k` dancers.  
 
-For any questions or bugs, please email yw2336@nyu.edu.
+The choreographer is going to ask the dancers to make moves. The goal of the choreographer is to ensure that there are disjoint, contiguous vertical or horizontal line segments of dancers.  
 
-## Running the game:
-
+For example, there are color `1`, `2`, `3`, `4`, and `k = 3`, then the following is a valid final state:
 ```
-python game.py <string:dancer_locations> <int:port_number> <int:board_size> <int:number_of_stars> [bool:print_board]
+1234  1 
+      2
+1234  3
+      4
 ```
 
-The last argument is optional, allowing you to see the movements of the dancers through an ASCII representation of the board.
+The spoiler is going to place `k` stars on the board before choreographer starts to move, and try make choreographer to spend more steps to reach a final state.
 
-
-## Running the client:
-Connect to the game server using the same port.  A sample client (for both spoiler and choreographer) has been provided.
-
-
-## Spoiler
-As the spoiler, wait for a message from the server containing the string "^", then send the coordinates of the stars in a string of x,y coordinates separated by spaces.
-
-For 10 stars, this means that there will be 20 integers sent to the server.
-
-After sending the coordinates, please close the socket on the client.  The server will also send a message of "$" signalling that the spoiler is no longer needed.
-
-The sample spoiler creates a star at a random location, so it is possible that it creates an invalid star.
-
+Both players will have `120` seconds as thinking time.
 
 ## Choreographer
-As the choreographer, you will receive the locations of the stars in the same format, a list of x,y coordinates separated by spaces.  At the end of this string will be a "#", to ensure that all characters have been sent.
+Choreographer will connect to server first. Server will send an `input_file` to choreographer. An `input_file` is similiar to `sample_dancedata.txt`.  
 
-If the star placement is invalid, the server will instead send the choreographer a message containing "$" to signal that the game has ended.
+Server will then send some other parameters to Choreographer:  
+`<board_size> <num_of_color> <k>`
 
-The choreographer's moves will be sent to the server as a pair of x,y coordinates for starting position and ending position of each dancer that the choreographer wants to
-move, separated by spaces.  The sample choreographer has an example of the required format.
+After spoiler has placed all the stars, server will send choreographer all the stars in the following format:  
+`<star_1_x> <star_1_y> <star_2_x> <star_2_y> ..... <star_k_x> <star_k_y>`  
 
+The server will start counting time immediately after sending stars.  
+
+The choreographer needs to send steps of parallel moves to the server. One `step` contains multiple `parallel move`s. Those dancers like to move at the same time that's why it's called "parallel". However, one dancer cannot move twice within one `step`. And no dancer can move on to a star. They can only move to an empty position or swap positions.  
+
+Choreographer needs to send the steps one by one to the server in the following format:  
+`<num_of_moves> <move1_start_x> <move1_start_y> <move1_end_x> <move1_end_y> ... <moveK_start_x> <moveK_start_y> <moveK_end_x> <moveK_end_y>`
+
+Choreographer needs to send a flag `DONE` to the server when all the steps are sent.
+
+## Spoiler
+Spoiler will be the second to connect to the server. Server will send the `input_file` such like `sample_dancedata.txt` to the spoiler first.  
+
+Server will then send the other parameters to spoiler same as what server will do to choreographer:  
+`<board_size> <num_of_color> <k>`
+
+The spoiler needs to send stars to the server in the following format:  
+`<star_1_x> <star_1_y> <star_2_x> <star_2_y> ..... <star_k_x> <star_k_y>`  
+
+Stars can only be placed on an empty spot.
+
+And then spoiler can rest.
+
+## Run the server
+```bash
+python3 game.py -H <host> -p <port> -f <filename> -s <size>
+```  
+Where `size` means the board size.
+
+## Run the sample player
+For Choreographer
+```bash
+python3 sample_player.py -H <host> -p <port> -s
 ```
-dancer1_start_x dancer1_start_y dancer1_end_x dancer1_end_y dancer2_start_x dancer2_start_y dancer2_end_x dancer2_end_y ...
+For spoiler
+```bash
+python3 sample_player.py -H <host> -p <port> -c
 ```
 
-This means that some can remain still by omitting the coordinates for that dancer (if towards the end of the dance).  In addition, you can also send moves so that the start and end position of a dancer is the same.  The behavior is identical.
+Both uses randomized methods, so sample choreographer can hardly reach the goal.
 
-After each move has been validated and updated in the game, the server will send a message of "#" to the choreographer, requesting the next set of moves.
+## Scoring
+Two players will play as choreographer and spoiler in turns.  
+The player who make an invalid move will lose that round.
+If each player lost a round then its a draw.  
+If no one made any invalid move then the one choreographer who uses fewer steps will win.
 
-When the game is complete (all dancers have been paired up with the other color), the server will send the choreographer a message of "$" so that the choreographer can close the socket.  The server will also show the number of steps required to finish the dance.
+## Graphic Interface
+Under construction...
 
-
-## Submission
-Please send your files to yw2336@nyu.edu with two bash scripts that accepts the following 4 parameters in order (one for spoiler and one for choreographer):
-
-```
-<team_name>_spoiler.sh <string:dancer_locations> <int:port_number> <int:board_size> <int:number_of_stars>
-<team_name>_choreographer.sh <string:dancer_locations> <int:port_number> <int:board_size> <int:number_of_stars>
-```
-
-If your solution also requires special attention (ie, python-3.0), please make sure that your script handles that.
+## Contact
+Let me know if there is any bugs or problems.  
+`taikun@nyu.edu`
