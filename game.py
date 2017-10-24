@@ -1,7 +1,8 @@
+#!/usr/bin/python
 import sys, socket, time, os
 from Server import Server
 from copy import deepcopy
-from getopt import getopt, GetoptError
+from getopt import getopt
 
 """
 Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>
@@ -19,6 +20,7 @@ class Game(object):
 		self.num_color = len(self.dancers)
 		self.board = self.__setup_board(self.dancers, size)
 		self.stars = list()
+		self.k = len(self.dancers[0]) # the max number of stars
 		self.dancer_steps = 0
 		# initialize server
 		self.server, self.choreographer, self.spoiler = self.__setup_server(host, port)
@@ -30,10 +32,12 @@ class Game(object):
 
 	def __process_input(self, filename):
 		"""read in input file"""
-		file_input = open(filename)
+		f = open(filename)
+		file_input = ""
 		dancers = list()
 		cur = -1
-		for line in file_input:
+		for line in f:
+			file_input += line
 			tokens = line.split()
 			if len(tokens) == 0:
 				continue # skip empty lines
@@ -66,6 +70,7 @@ class Game(object):
 	def __is_star_valid(self, x, y):
 		"""Check if it is valid to place a start at this position"""
 		if not self.__inside_board(x, y):
+			print("Star not inside board")
 			return False # outside board
 		valid = False
 		if self.board[x][y] == 0:
@@ -73,6 +78,7 @@ class Game(object):
 			# check manhattan distance with other stars
 			for s in self.stars:
 				if self.__manhattan_distance(s[0], s[1], x, y) < self.num_color + 1:
+					print("Manhattan distance not satisfied with " + str(s[0]) + ", " + str(s[1]))
 					valid = False # manhattan distance can't smaller than c + 1
 					break
 		return valid
@@ -80,12 +86,16 @@ class Game(object):
 	def __is_dancer_move_valid(self, start_x, start_y, end_x, end_y):
 		"""Check if this dancer move is valid"""
 		if not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
+			print("Pos outside board")
 			return False # one of points outside board
 		elif self.board[start_x][start_y] in (0, -1):
+			print("no dancer at this location")
 			return False # no dancer at this location
 		elif start_x == end_x and start_y == end_y:
+			print("no movement at all")
 			return False # no movement at all
 		elif self.board[end_x][end_y] == -1:
+			print("There is a star at end location")
 			return False # there is a star at end location
 		else:
 			return True
@@ -215,21 +225,32 @@ class Game(object):
 		# send input file to both players
 		print("Sending input file to both players...")
 		self.server.send_all(self.file_input)
+
+		# send other parameters to both players
+		# board size, numOfColor, k
+		print("Sending other parameters to both players...")
+		self.server.send_all(str(self.board_size) + " " + str(self.num_color) + " " + str(self.k))
+
 		# now wait for spoiler to send stars
 		print("Waiting for spoiler to send the stars...")
 		start_time = time.time()
-		star_data = self.server.receive(1)
+		star_data = ""
+		while not star_data:
+			star_data = self.server.receive(1)
 		end_time = time.time()
+		print(star_data)
 		if time.time() - start_time > 120:
 			print("Spoiler exceeds time limit!")
 			sys.exit()
 		print("Received stars!")
+
 		# parse stars
 		s_list = star_data.split()
 		stars = list()
-		for i in range(len(s_list)/2):
-			stars.append((int(s_list[i]), int(s_list[i+1])))
+		for i in range(int(len(s_list)/2)):
+			stars.append((int(s_list[2*i]), int(s_list[2*i+1])))
 		print(stars)
+
 		print("Adding stars to the board...")
 		# process stars
 		success, msg = self.__place_stars(stars)
@@ -237,54 +258,75 @@ class Game(object):
 			print(msg)
 			sys.exit()
 		print("Done.")
+
 		# send stars to choreographer
 		print("Sending stars to the choreographer...")
 		self.server.send_to(0, star_data)
+
 		# receive moves from choreographer
 		print("Receiving moves from choreographer...")
 		start_time = time.time()
-		choreo_finish = False
+		move_data = ""
 		while True:
 			if time.time() - start_time > 120:
-				break # exceed time limit
-			move_data = self.server.receive(0)
-			end_time = time.time()
-			# parse move data
-			m_list = move_data.split()
-			moves = list()
-			for i in range(len(m_list)/4):
-				moves.append([int(m_list[i]), int(m_list[i+1]), int(m_list[i+2]), int(m_list[i+3])])
-			# make move
-			print(moves)
-			move_success, msg = self.__update_dancers(moves)
-			if not success:
-				print(msg) # invalid move
+				print("Choreographer exceeds time limit!")
+				self.server.close()
 				sys.exit()
-			# check if game is finished
-			if self.__check_finish():
-				choreo_finish = True
+			# receive data
+			data = self.server.receive(0)
+			print(data)
+			if data == "DONE": # received DONE flag
 				break
-		# check if finish or timeout
-		if choreo_finish or self.__check_finish():
+			move_data += data
+
+		# parse move data
+		md_l = move_data.split()
+		steps = list()
+		while len(md_l) != 0:
+			# get the move count
+			c = int(md_l.pop(0))
+			moves = list()
+			for i in range(c):
+				x1 = md_l.pop(0)
+				y1 = md_l.pop(0)
+				x2 = md_l.pop(0)
+				y2 = md_l.pop(0)
+				moves.append([int(x1), int(y1), int(x2), int(y2)])
+			steps.append(moves)
+		
+		# now execute the moves
+		for m in steps:
+			move_success, msg = self.__update_dancers(m)
+			if not move_success:
+				print(msg) # invalid move
+				self.server.close()
+				sys.exit()
+		
+		# check if the choreographer has reached the goal
+		if self.__check_finish():
 			print("Game finished!")
 			print(self.choreographer + " has taken " + self.dancer_steps + " steps.")
 		else:
-			print("Choreographer exceeds time limit!")
+			print("Game finished!")
+			print(self.choreographer + " didn't reach the goal.")
+		self.server.close()
 
+def print_usage():
+	print("Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>")
 
-if __name__ == "__main__":
+def main():
 	host = None
 	port = None
 	filename = None
 	size = None
 	try:
-		opts, args = getopt(sys.argv, "hH:p:f:s:", ["help"])
+		opts, args = getopt(sys.argv[1:], "hH:p:f:s:", ["help"])
 	except GetoptError:
-		print(__doc__)
+		print_usage()
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print(__doc__)
+			print_usage()
 			sys.exit()
 		elif opt == "-H":
 			host = arg
@@ -298,3 +340,6 @@ if __name__ == "__main__":
 	game = Game(host, port, filename, size)
 	# run game
 	game.start_game()
+
+if __name__ == "__main__":
+	main()
