@@ -1,9 +1,10 @@
 import sys, socket, time, os
 from Server import Server
 from copy import deepcopy
+from getopt import getopt, GetoptError
 
 """
-Usage: python3 game.py -h <host> -p <port> -f <filename> -s <size>
+Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>
 """
 
 
@@ -254,6 +255,7 @@ class Game(object):
 			for i in range(len(m_list)/4):
 				moves.append([int(m_list[i]), int(m_list[i+1]), int(m_list[i+2]), int(m_list[i+3])])
 			# make move
+			print(moves)
 			move_success, msg = self.__update_dancers(moves)
 			if not success:
 				print(msg) # invalid move
@@ -271,4 +273,28 @@ class Game(object):
 
 
 if __name__ == "__main__":
-	game = Game("localhost", 12345, "./sample_dancedata.txt", 400)
+	host = None
+	port = None
+	filename = None
+	size = None
+	try:
+		opts, args = getopt(sys.argv, "hH:p:f:s:", ["help"])
+	except GetoptError:
+		print(__doc__)
+		sys.exit(2)
+	for opt, arg in opts:
+		if opt in ("-h", "--help"):
+			print(__doc__)
+			sys.exit()
+		elif opt == "-H":
+			host = arg
+		elif opt == "-p":
+			port = int(arg)
+		elif opt == "-f":
+			filename = arg
+		elif opt == "-s":
+			size = int(arg)
+	# initialize game		
+	game = Game(host, port, filename, size)
+	# run game
+	game.start_game()
