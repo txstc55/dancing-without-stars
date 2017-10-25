@@ -8,18 +8,21 @@ The choreographer is going to ask the dancers to make moves. The goal of the cho
 
 For example, there are color `1`, `2`, `3`, `4`, and `k = 3`, then the following is a valid final state:
 ```
-1234  1 
-      2
-1234  3
+1234  2 
+      1
+  42133
       4
 ```
+They can be in any order, but one line should contain exactly one dancer of each color.  
+A line can touch another line but they must be disjoint which means they can't share any dancer.  
 
 The spoiler is going to place `k` stars on the board before choreographer starts to move, and try make choreographer to spend more steps to reach a final state.
 
 Both players will have `120` seconds as thinking time.
 
 ## Choreographer
-Choreographer will connect to server first. Server will send an `input_file` to choreographer. An `input_file` is similiar to `sample_dancedata.txt`.  
+Choreographer will connect to server first and send their name to the server.  
+Server will send an `input_file` to choreographer. An `input_file` is similiar to `sample_dancedata.txt`.  
 
 Server will then send some other parameters to Choreographer:  
 `<board_size> <num_of_color> <k>`
@@ -37,7 +40,8 @@ Choreographer needs to send the steps one by one to the server in the following 
 Choreographer needs to send a flag `DONE` to the server when all the steps are sent.
 
 ## Spoiler
-Spoiler will be the second to connect to the server. Server will send the `input_file` such like `sample_dancedata.txt` to the spoiler first.  
+Spoiler will be the second to connect to the server and send their name to the server.  
+Server will send the `input_file` such like `sample_dancedata.txt` to the spoiler first.  
 
 Server will then send the other parameters to spoiler same as what server will do to choreographer:  
 `<board_size> <num_of_color> <k>`
@@ -45,7 +49,9 @@ Server will then send the other parameters to spoiler same as what server will d
 The spoiler needs to send stars to the server in the following format:  
 `<star_1_x> <star_1_y> <star_2_x> <star_2_y> ..... <star_k_x> <star_k_y>`  
 
-Stars can only be placed on an empty spot.
+Stars can only be placed on an empty spot. And no two stars can be closer then `c + 1` manhattan distance apart. Where `c` is the number of colors.  
+
+Manhattan distance: `|x1 - x2| + |y1 - y2|`.  
 
 And then spoiler can rest.
 
