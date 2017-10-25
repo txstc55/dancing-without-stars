@@ -93,11 +93,15 @@ class Game(object):
   def __is_dancer_move_valid(self, start_x, start_y, end_x, end_y):
     """
     Check if this dancer move is valid\n
-    1. dancer cannot move to a position that has a star\n
-    2. dancer cannot move to a position outside the board
+    1. dancer can only move 1 row-wise or col-wise\n
+    2. dancer cannot move to a position that has a star\n
+    3. dancer cannot move to a position outside the board
     """
+    if self.__manhattan_distance(start_x, start_y, end_x, end_y) > 1:
+      print("Dancer can only move 1 row-wise or col-wise")
+      return False
     # check if both positions are inside the board
-    if not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
+    elif not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
       print("Position outside board")
       return False # one of points outside board
     # check if there is a dancer at the start position
