@@ -59,6 +59,12 @@ Manhattan distance: `|x1 - x2| + |y1 - y2|`.
 
 And then spoiler can rest.
 
+## IMPORTANT NOTE If you are making your own client
+Every time when you send something to server, make sure to append an `&` to the end of your string.  
+This means the end of some data to the server.  
+
+And when server send something back, it will have an `&` at the end too. Make sure to handle that.  
+
 ## Run the server
 ```bash
 python3 game.py -H <host> -p <port> -f <filename> -s <size>

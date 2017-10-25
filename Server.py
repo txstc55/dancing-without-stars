@@ -5,6 +5,7 @@ class Server(object):
     
   def __init__(self, host, port):
     """Init the server, set two sockets for players"""
+    self.cache = [list(), list()]
     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.socket.bind((host, port))
@@ -25,16 +26,21 @@ class Server(object):
 
   def send_all(self, data):
     """send data to both players"""
+    print(data + "&")
     for socket in self.sockets:
-      socket.sendall(bytes(data, "utf-8"))
+      socket.send(bytes(data + "&", "utf-8"))
 
   def send_to(self, player, data):
     """0: Choreographer; 1: spoiler"""
-    self.sockets[player].sendall(bytes(data, "utf-8"))
+    self.sockets[player].send(bytes(data + "&", "utf-8"))
 
   def receive(self, player):
     """receive data from one player"""
-    return self.sockets[player].recv(4096).decode("utf-8")
+    if len(self.cache[player]) > 0:
+      return self.cache[player].pop(0)
+    else:
+      self.cache[player] += list(filter(None, self.sockets[player].recv(4096).decode("utf-8").split("&")))
+      return self.cache[player].pop(0)
 
   def close(self):
     self.socket.close()
