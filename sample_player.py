@@ -71,19 +71,29 @@ def get_stars(dancers, k, board_size, num_color):
 # TODO add your method here
 def get_a_move(dancers, stars, k, board_size, num_color):
   # pick 5 random dancers from dancers
-  random_dancers = random.sample(dancers, 5)
+  count = 0
+  moved = set()
   move = ""
-  for d in random_dancers:
-    while True:
-      x2 = random.randint(0, board_size - 1)
-      y2 = random.randint(0, board_size - 1)
-      if (x2, y2) not in dancers and (x2, y2) not in stars:
-        move += (str(d[0]) + " " + str(d[1]) + " " + str(x2) + " " + str(y2) + " ")
-        dancers.remove((d[0], d[1]))
-        dancers.add((x2, y2))
-        break
+  while count < 5:
+    # pick random dancers
+    picked = random.sample(dancers, 5 - count)
+    for d in picked:
+      x, y = d[0], d[1]
+      if (x, y) in moved:
+        continue
+      c = random.sample([(1, 0), (-1, 0), (0, 1), (0, -1)], 1)[0]
+      x2 = x + c[0]
+      y2 = y + c[1]
+      if (x2, y2) in dancers or (x2, y2) in stars:
+        continue
+      if x2 not in range(board_size) or y2 not in range(board_size):
+        continue
+      move += (str(x) + " " + str(y) + " " + str(x2) + " " + str(y2) + " ")
+      dancers.remove((x, y))
+      dancers.add((x2, y2))
+      moved.add((x2, y2))
+      count += 1
   return "5 " + move
-
 
 def main():
   host, port, player = get_args()
