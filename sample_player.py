@@ -120,7 +120,12 @@ def main():
       move = get_a_move(dancers, stars, k, board_size, num_color)
       print(move)
       client.send(move)
+    # send DONE flag
     client.send("DONE")
+    # send a random line
+    random_dancer = random.sample(dancers, 1)[0]
+    client.send(str(random_dancer[0]) + " " + str(random_dancer[1]) + " " + str(random_dancer[0]) + " " + str(random_dancer[1] + 4))
+
   # close connection
   client.close()
 

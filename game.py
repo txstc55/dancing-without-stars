@@ -118,66 +118,73 @@ class Game(object):
   def __check_finish(self, lines):
     """check if the current game is finished"""
     checked = set()
-		# go through the lines
-		finished = True
-		for line in lines:
-			# get the points
-			start_x = line[0]
-			start_y = line[1]
-			end_x = line[2]
-			end_y = line[3]
-			# get direction
-			direct_x = (end_x-start_x) / abs(end_x-start_x)
-			direct_y = (end_y-start_y) / abs(end_y-start_y)
-			cur_x = start_x
-			cur_y = start_y
-			colors = set()
-			valid_line = True
-			while True:
-				if (cur_x, cur_y) in checked:
-					print("Reuse dancer " + cur_x + ", " + cur_y + " in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
-					valid_line = False
-					break
-				checked.add((cur_x, cur_y))
-				c = self.board[cur_x][cur_y]
-				if c in (0, -1):
-					print("No dancer at position " + cur_x + ", " + cur_y + " for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
-					valid_line = False
-					break
-				if c in colors:
-					print("Duplicate color " + c + " found for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
-					valid_line = False
-					break
-				colors.add(c)
-				if cur_x == end_x and cur_y == end_y:
-					break # this line is all checked
-				cur_x += direct_x
-				cur_y += direct_y
-			# check if that was a valid line
-			if not valid_line:
-				finished = False
-				break
-			# check if this line contains all the colors
-			if len(colors) != self.num_color:
-				print("Missing color in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
-				finished = False
-				break
-		# finished checking all the lines
-		# see if the state is still good
-		if not finished:
-			return False
-		# now check if all the dancers has been in the lines
-		for c in self.dancers:
-			error = False
-			for d in c:
-				if (d[0], d[1]) not in checked:
-					error = True
-					print("(" + d[0] + ", " + d[1] + ") not in any line")
-					break
-			if error:
-				finished = False
-				break
-		return finished
+    # go through the lines
+    finished = True
+    for line in lines:
+      # get the points
+      start_x = line[0]
+      start_y = line[1]
+      end_x = line[2]
+      end_y = line[3]
+      # get direction
+      direct_x = (end_x-start_x) / abs(end_x-start_x)
+      direct_y = (end_y-start_y) / abs(end_y-start_y)
+      if direct_x != 0 and direct_y != 0:
+        # if they both not equals to 0
+        # then it means the moving direction
+        # is not vertical or horizontal
+        print("Invalid moving direction for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+        finished = False
+        break
+      cur_x = start_x
+      cur_y = start_y
+      colors = set()
+      valid_line = True
+      while True:
+        if (cur_x, cur_y) in checked:
+          print("Reuse dancer " + cur_x + ", " + cur_y + " in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          valid_line = False
+          break
+        checked.add((cur_x, cur_y))
+        c = self.board[cur_x][cur_y]
+        if c in (0, -1):
+          print("No dancer at position " + cur_x + ", " + cur_y + " for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          valid_line = False
+          break
+        if c in colors:
+          print("Duplicate color " + c + " found for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          valid_line = False
+          break
+        colors.add(c)
+        if cur_x == end_x and cur_y == end_y:
+          break # this line is all checked
+        cur_x += direct_x
+        cur_y += direct_y
+      # check if that was a valid line
+      if not valid_line:
+        finished = False
+        break
+      # check if this line contains all the colors
+      if len(colors) != self.num_color:
+        print("Missing color in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+        finished = False
+        break
+    # finished checking all the lines
+    # see if the state is still good
+    if not finished:
+      return False
+    # now check if all the dancers has been in the lines
+    for c in self.dancers:
+      error = False
+      for d in c:
+        if (d[0], d[1]) not in checked:
+          error = True
+          print("(" + d[0] + ", " + d[1] + ") not in any line")
+          break
+      if error:
+        finished = False
+        break
+    return finished
 
   def __place_stars(self, stars):
     """
@@ -260,10 +267,10 @@ class Game(object):
     start_time = time.time()
     star_data = ""
     while not star_data:
-			if time.time() - start_time > 120:
-				print("Spoiler exceeds time limit!")
-				self.server.close()
-				sys.exit()
+      if time.time() - start_time > 120:
+        print("Spoiler exceeds time limit!")
+        self.server.close()
+        sys.exit()
       star_data = self.server.receive(1)
     print(star_data)
     print("Received stars!")
@@ -280,7 +287,7 @@ class Game(object):
     success, msg = self.__place_stars(stars)
     if not success:
       print(msg)
-			self.server.close()
+      self.server.close()
       sys.exit()
     print("Done.")
 
@@ -304,11 +311,11 @@ class Game(object):
         break
       move_data += data
 
-		print("Receiving all the final state line infos...")
-		line_info = ""
-		while not line_info:
-			line_info = self.server.receive(0)
-		print(line_info)
+    print("Receiving all the final state line infos...")
+    line_info = ""
+    while not line_info:
+      line_info = self.server.receive(0)
+    print(line_info)
 
     # parse move data
     md_l = move_data.split()
@@ -326,7 +333,7 @@ class Game(object):
       steps.append(moves)
     
     # now execute the moves
-		print("executing the moves...")
+    print("executing the moves...")
     for m in steps:
       move_success, msg = self.__update_dancers(m)
       if not move_success:
@@ -334,15 +341,15 @@ class Game(object):
         self.server.close()
         sys.exit()
 
-		# parse line_info
-		li_l = line_info.split()
-		lines = list()
-		if len(li_l) % 4 == 0:
-			print("Incorrect data length!")
-			self.server.close()
-			sys.exit(2)
-		for i in range(int(len(li_l)/4)):
-			lines.append((li_l[4*i], li_l[4*i+1], li_l[4*i+2], li_l[4*i+3]))
+    # parse line_info
+    li_l = line_info.split()
+    lines = list()
+    if len(li_l) % 4 == 0:
+      print("Incorrect data length!")
+      self.server.close()
+      sys.exit(2)
+    for i in range(int(len(li_l)/4)):
+      lines.append((li_l[4*i], li_l[4*i+1], li_l[4*i+2], li_l[4*i+3]))
     
     # check if the choreographer has reached the goal
     if self.__check_finish(lines):

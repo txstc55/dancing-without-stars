@@ -37,7 +37,11 @@ The choreographer needs to send steps of parallel moves to the server. One `step
 Choreographer needs to send the steps one by one to the server in the following format:  
 `<num_of_moves> <move1_start_x> <move1_start_y> <move1_end_x> <move1_end_y> ... <moveK_start_x> <moveK_start_y> <moveK_end_x> <moveK_end_y>`
 
-Choreographer needs to send a flag `DONE` to the server when all the steps are sent.
+Choreographer needs to send a flag `DONE` to the server when all the steps are sent.  
+The last step for Choreographer is to send all the lines to the server in the following format:  
+`line1_start_x line1_start_y line1_end_x line1_end_y ...`
+
+The clock will stop counting once you sent "DONE" to server, but server will validate if line info matches steps later.
 
 ## Spoiler
 Spoiler will be the second to connect to the server and send their name to the server.  
