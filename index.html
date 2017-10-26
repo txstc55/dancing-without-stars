@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Dancing without stars</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <style>
+      .board {
+        width: 760px;
+        height: 760px;
+        border:1px solid black;
+        box-sizing: unset;
+      }
+      .tile {
+        box-sizing: unset;
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="board" class="board"></div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // a flag to show if the board has been initialized
+      var initialized = false;
+
+      /**
+       * Initialize a board into #board div using the given size.
+       */
+      function initialBoard(size) {
+        for (var i=0; i < size; i++) {
+          for (var j=0; j < size; j++) {
+            var color = parseInt((i / size) + i) % 2 == parseInt((j / size) + j) % 2 ? 'gainsboro' : 'white';
+            var width = 760 / size;
+            var height = 760 / size;
+            var style = '\'width: ' + width + 'px; '
+              + 'height: ' + height + 'px; '
+              + 'float: left; background-color: ' + color + ';\'';
+            var elmt = '<div class="tile" style=' + style + '></div>'
+            $('#board').append(elmt);
+          }
+        }
+      }
+
+      /**
+       * state
+       * {
+       *  board_size : int,
+       *  num_color : int,
+       *  board: [[]]
+       * }
+       */
+      function updateState(state) {
+
+      }
+
+      $(function() {
+        // load socket.io
+        var socket = io();
+        socket.on('STATE', function(state) {
+          if (!initialized) {
+            initialBoard(state.board_size);
+            initialized = true;
+          }
+          // update displayed info
+          updateState(state);
+        });
+      });
+    </script>
+  </body>
+</html>
