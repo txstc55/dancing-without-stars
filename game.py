@@ -301,6 +301,9 @@ class Game(object):
     success, msg = self.__place_stars(stars)
     if not success:
       print(msg)
+      if using_ui:
+        update_state(self.board_size, self.num_color, self.choreographer, \
+          self.spoiler, msg, self.get_board())
       self.server.close()
       sys.exit()
     print("Done.")
@@ -360,13 +363,15 @@ class Game(object):
     print("executing the moves...")
     for m in steps:
       move_success, msg = self.__update_dancers(m)
+      if not move_success:
+        print(msg) # invalid move
+        update_state(self.board_size, self.num_color, self.choreographer, \
+          self.spoiler, msg, self.get_board())
+        sys.exit()
       if using_ui:
         update_state(self.board_size, self.num_color, self.choreographer, \
           self.spoiler, "executing the moves...", self.get_board())
         time.sleep(1)
-      if not move_success:
-        print(msg) # invalid move
-        sys.exit()
 
     # parse line_info
     li_l = line_info.split()
