@@ -94,11 +94,15 @@ class Game(object):
   def __is_dancer_move_valid(self, start_x, start_y, end_x, end_y):
     """
     Check if this dancer move is valid\n
-    1. dancer cannot move to a position that has a star\n
-    2. dancer cannot move to a position outside the board
+    1. dancer can only move 1 row-wise or col-wise\n
+    2. dancer cannot move to a position that has a star\n
+    3. dancer cannot move to a position outside the board
     """
+    if self.__manhattan_distance(start_x, start_y, end_x, end_y) > 1:
+      print("Dancer can only move 1 row-wise or col-wise")
+      return False
     # check if both positions are inside the board
-    if not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
+    elif not (self.__inside_board(start_x, start_y) and self.__inside_board(end_x, end_y)):
       print("Position outside board")
       return False # one of points outside board
     # check if there is a dancer at the start position
@@ -123,18 +127,24 @@ class Game(object):
     finished = True
     for line in lines:
       # get the points
-      start_x = line[0]
-      start_y = line[1]
-      end_x = line[2]
-      end_y = line[3]
+      start_x = int(line[0])
+      start_y = int(line[1])
+      end_x = int(line[2])
+      end_y = int(line[3])
       # get direction
-      direct_x = (end_x-start_x) / abs(end_x-start_x)
-      direct_y = (end_y-start_y) / abs(end_y-start_y)
+      if end_x-start_x == 0:
+        direct_x = 0
+      else:
+        direct_x = int((end_x-start_x) / abs(end_x-start_x))
+      if end_y-start_y == 0:
+        direct_y = 0
+      else:
+        direct_y = int((end_y-start_y) / abs(end_y-start_y))
       if direct_x != 0 and direct_y != 0:
         # if they both not equals to 0
         # then it means the moving direction
         # is not vertical or horizontal
-        print("Invalid moving direction for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+        print("Invalid moving direction for line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
         finished = False
         break
       cur_x = start_x
@@ -143,17 +153,17 @@ class Game(object):
       valid_line = True
       while True:
         if (cur_x, cur_y) in checked:
-          print("Reuse dancer " + cur_x + ", " + cur_y + " in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          print("Reuse dancer " + str(cur_x) + ", " + str(cur_y) + " in line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
           valid_line = False
           break
         checked.add((cur_x, cur_y))
         c = self.board[cur_x][cur_y]
         if c in (0, -1):
-          print("No dancer at position " + cur_x + ", " + cur_y + " for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          print("No dancer at position " + str(cur_x) + ", " + str(cur_y) + " for line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
           valid_line = False
           break
         if c in colors:
-          print("Duplicate color " + c + " found for line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+          print("Duplicate color " + str(c) + " found for line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
           valid_line = False
           break
         colors.add(c)
@@ -167,7 +177,7 @@ class Game(object):
         break
       # check if this line contains all the colors
       if len(colors) != self.num_color:
-        print("Missing color in line (" + start_x + ", " + start_y + ")--(" + end_x + ", " + end_y + ")")
+        print("Missing color in line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
         finished = False
         break
     # finished checking all the lines
@@ -180,7 +190,7 @@ class Game(object):
       for d in c:
         if (d[0], d[1]) not in checked:
           error = True
-          print("(" + d[0] + ", " + d[1] + ") not in any line")
+          print("(" + str(d[0]) + ", " + str(d[1]) + ") not in any line")
           break
       if error:
         finished = False
@@ -310,6 +320,8 @@ class Game(object):
         sys.exit()
       # receive data
       data = self.server.receive(0)
+      if not data:
+        continue
       print(data)
       if data == "DONE": # received DONE flag
         break
@@ -320,6 +332,8 @@ class Game(object):
     while not line_info:
       line_info = self.server.receive(0)
     print(line_info)
+
+    self.server.close()
 
     # parse move data
     md_l = move_data.split()
@@ -342,15 +356,13 @@ class Game(object):
       move_success, msg = self.__update_dancers(m)
       if not move_success:
         print(msg) # invalid move
-        self.server.close()
         sys.exit()
 
     # parse line_info
     li_l = line_info.split()
     lines = list()
-    if len(li_l) % 4 == 0:
+    if len(li_l) % 4 != 0:
       print("Incorrect data length!")
-      self.server.close()
       sys.exit(2)
     for i in range(int(len(li_l)/4)):
       lines.append((li_l[4*i], li_l[4*i+1], li_l[4*i+2], li_l[4*i+3]))
@@ -358,11 +370,10 @@ class Game(object):
     # check if the choreographer has reached the goal
     if self.__check_finish(lines):
       print("Game finished!")
-      print(self.choreographer + " has taken " + self.dancer_steps + " steps.")
+      print(self.choreographer + " has taken " + str(self.dancer_steps) + " steps.")
     else:
       print("Game finished!")
       print(self.choreographer + " didn't reach the goal.")
-    self.server.close()
 
 def print_usage():
   print("Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>")

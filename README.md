@@ -32,7 +32,7 @@ After spoiler has placed all the stars, server will send choreographer all the s
 
 The server will start counting time immediately after sending stars.  
 
-The choreographer needs to send steps of parallel moves to the server. One `step` contains multiple `parallel move`s. Those dancers like to move at the same time that's why it's called "parallel". However, one dancer cannot move twice within one `step`. And no dancer can move on to a star. They can only move to an empty position or swap positions.  
+The choreographer needs to send steps of parallel moves to the server. One `step` contains multiple `parallel move`s. Those dancers like to move at the same time that's why it's called "parallel". However, one dancer cannot move twice within one `step`. And no dancer can move on to a star. They can only move to an empty position or swap positions. And note, each dancer can only move 1 row-wise or col-wise so the manhattan distance between the start point and the end point should be 1.
 
 Choreographer needs to send the steps one by one to the server in the following format:  
 `<num_of_moves> <move1_start_x> <move1_start_y> <move1_end_x> <move1_end_y> ... <moveK_start_x> <moveK_start_y> <moveK_end_x> <moveK_end_y>`
@@ -58,6 +58,12 @@ Stars can only be placed on an empty spot. And no two stars can be closer then `
 Manhattan distance: `|x1 - x2| + |y1 - y2|`.  
 
 And then spoiler can rest.
+
+## IMPORTANT NOTE If you are making your own client
+Every time when you send something to server, make sure to append an `&` to the end of your string.  
+This means the end of some data to the server.  
+
+And when server send something back, it will have an `&` at the end too. Make sure to handle that.  
 
 ## Run the server
 ```bash
