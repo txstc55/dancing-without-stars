@@ -39,7 +39,13 @@ class Server(object):
     if len(self.cache[player]) > 0:
       return self.cache[player].pop(0)
     else:
-      self.cache[player] += list(filter(None, self.sockets[player].recv(4096).decode("utf-8").split("&")))
+      # keep receive until the last char is '&'
+      data = ""
+      while True:
+        data += self.sockets[player].recv(4096).decode("utf-8")
+        if len(data) > 0 and data[-1] == "&":
+          break
+      self.cache[player] += list(filter(None, data.split("&")))
       return self.cache[player].pop(0)
 
   def close(self):

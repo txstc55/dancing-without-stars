@@ -19,7 +19,13 @@ class Client(object):
     if len(self.cache) > 0:
       return self.cache.pop(0)
     else:
-      self.cache += list(filter(None, self.socket.recv(4096).decode("utf-8").split("&")))
+      # keep receive until the last char is &
+      data = ""
+      while True:
+        data += self.socket.recv(4096).decode("utf-8")
+        if len(data) > 0 and data[-1] == "&":
+          break
+      self.cache += list(filter(None, data.split("&")))
       return self.cache.pop(0)
 
   def close(self):
