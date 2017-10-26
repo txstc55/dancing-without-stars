@@ -271,14 +271,14 @@ class Game(object):
     return self.board
 
   def start_game(self, using_ui):
-    # send input file to both players
-    print("Sending input file to both players...")
-    self.server.send_all(self.file_input)
-
-    # send other parameters to both players
+    # send parameters to both players
     # board size, numOfColor, k
     print("Sending other parameters to both players...")
     self.server.send_all(str(self.board_size) + " " + str(self.num_color) + " " + str(self.k))
+
+    # send input file to both players
+    print("Sending input file to both players...")
+    self.server.send_all(self.file_input)
 
     # now wait for spoiler to send stars
     print("Waiting for spoiler to send the stars...")
