@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 app.post('/', (req, res) => {
   // update current state
   STATE = req.body;
-  console.log('update state: ', STATE);
+  // console.log('update state: ', STATE);
   //send state to frontends
   io.emit('STATE', STATE);
   res.sendStatus(200)

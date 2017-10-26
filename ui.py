@@ -18,8 +18,7 @@ def update_state(board_size, num_color, chore, spoi, stage, board):
     "spoiler" : spoi, \
     "stage" : stage, \
     "board" : board }
-  r = requests.post("http://127.0.0.1:3000/", json=data)
-
-
-if __name__ == "__main__":
-  update_state(10, 10, "TK", "some", "helloo", [[]])
+  try:
+    r = requests.post("http://127.0.0.1:3000/", json=data)
+  except RuntimeError:
+    print("[ERROR] failed to update state to frontends!!!")

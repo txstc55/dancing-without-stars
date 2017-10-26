@@ -275,6 +275,9 @@ class Game(object):
 
     # now wait for spoiler to send stars
     print("Waiting for spoiler to send the stars...")
+    if using_ui:
+      update_state(self.board_size, self.num_color, self.choreographer, \
+        self.spoiler, "Waiting for the stars...", self.get_board())
     start_time = time.time()
     star_data = ""
     while not star_data:
@@ -311,6 +314,9 @@ class Game(object):
 
     # receive moves from choreographer
     print("Receiving moves from choreographer...")
+    if using_ui:
+      update_state(self.board_size, self.num_color, self.choreographer, \
+        self.spoiler, "Receiving moves from choreographer...", self.get_board())
     start_time = time.time()
     move_data = ""
     while True:
@@ -354,6 +360,10 @@ class Game(object):
     print("executing the moves...")
     for m in steps:
       move_success, msg = self.__update_dancers(m)
+      if using_ui:
+        update_state(self.board_size, self.num_color, self.choreographer, \
+          self.spoiler, "executing the moves...", self.get_board())
+        time.sleep(1)
       if not move_success:
         print(msg) # invalid move
         sys.exit()
@@ -371,9 +381,15 @@ class Game(object):
     if self.__check_finish(lines):
       print("Game finished!")
       print(self.choreographer + " has taken " + str(self.dancer_steps) + " steps.")
+      if using_ui:
+        update_state(self.board_size, self.num_color, self.choreographer, \
+          self.spoiler, self.choreographer + " has taken " + str(self.dancer_steps) + " steps.", self.get_board())
     else:
       print("Game finished!")
       print(self.choreographer + " didn't reach the goal.")
+      if using_ui:
+        update_state(self.board_size, self.num_color, self.choreographer, \
+          self.spoiler, self.choreographer + " didn't reach the goal.", self.get_board())
 
 def print_usage():
   print("Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>")
