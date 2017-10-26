@@ -28,6 +28,7 @@
           <div class="row">Choreographer:  <span id="chore"></span></div>
           <div class="row">Spoiler:  <span id="spoi"></span></div>
           <div class="row">Stage: <span id="stage"></span></div>
+          <div class="row"><span id="timer"></span></div>
         </div>
       </div>
     </div>
@@ -38,6 +39,7 @@
     <script>
       // a flag to show if the board has been initialized
       var initialized = false;
+      var timer = false; // timer flag
 
       /**
        * Initialize a board into #board div using the given size.
@@ -68,6 +70,43 @@
         }
       }
 
+      function startTimer() {
+        // set timer to 120.00
+        $('#timer').html(120.00);
+        timer = true;
+        // start updating timer
+        updateTimer();
+      }
+
+      function stopTimer() {
+        timer = false;
+      }
+
+      function updateTimer() {
+        if (timer) {
+          // get current value
+          var value = parseFloat($('#timer').html());
+          value = value - 0.01;
+          if (value > 0) {
+            $('#timer').html(value);
+            setTimeout(function() {
+              updateTimer();
+            }, 10);
+          } else {
+            value = 0.0;
+            $('#timer').html(value);
+            $('#timer').css('color', 'red'); // change text to a warning color
+          }
+        } else {
+          cleanTimer();
+        }
+      }
+
+      function cleanTimer() {
+        $('#timer').html(''); // clear
+        $('#timer').css('color', 'black'); // change color back
+      }
+
       /**
        * state
        * {
@@ -76,7 +115,8 @@
        *  choreographer : string,
        *  spoiler : string,
        *  stage : string,
-       *  board: [[]]
+       *  board : [[]],
+       *  timer : true or false
        * }
        */
       function updateState(state) {
@@ -90,6 +130,13 @@
         }
         // update stage info
         $('#stage').html(state.stage);
+        // check timer
+        if (state.timer) {
+          startTimer();
+        } else {
+          stopTimer();
+          cleanTimer();
+        }
       }
 
       $(function() {

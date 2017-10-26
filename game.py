@@ -277,17 +277,23 @@ class Game(object):
     print("Waiting for spoiler to send the stars...")
     if using_ui:
       update_state(self.board_size, self.num_color, self.choreographer, \
-        self.spoiler, "Waiting for the stars...", self.get_board())
+        self.spoiler, "Waiting for the stars...", self.get_board(), True)
     start_time = time.time()
     star_data = ""
     while not star_data:
       if time.time() - start_time > 120:
+        if using_ui:
+          update_state(self.board_size, self.num_color, self.choreographer, \
+            self.spoiler, "Waiting for the stars...", self.get_board(), False)
         print("Spoiler exceeds time limit!")
         self.server.close()
         sys.exit()
       star_data = self.server.receive(1)
     print(star_data)
     print("Received stars!")
+    if using_ui:
+      update_state(self.board_size, self.num_color, self.choreographer, \
+        self.spoiler, "Received stars!", self.get_board(), False)
 
     # parse stars
     s_list = star_data.split()
@@ -303,13 +309,13 @@ class Game(object):
       print(msg)
       if using_ui:
         update_state(self.board_size, self.num_color, self.choreographer, \
-          self.spoiler, msg, self.get_board())
+          self.spoiler, msg, self.get_board(), False)
       self.server.close()
       sys.exit()
     print("Done.")
     if using_ui:
       update_state(self.board_size, self.num_color, self.choreographer, \
-        self.spoiler, "Stars added to board.", self.get_board())
+        self.spoiler, "Stars added to board.", self.get_board(), False)
 
     # send stars to choreographer
     print("Sending stars to the choreographer...")
@@ -319,11 +325,14 @@ class Game(object):
     print("Receiving moves from choreographer...")
     if using_ui:
       update_state(self.board_size, self.num_color, self.choreographer, \
-        self.spoiler, "Receiving moves from choreographer...", self.get_board())
+        self.spoiler, "Receiving moves from choreographer...", self.get_board(), True)
     start_time = time.time()
     move_data = ""
     while True:
       if time.time() - start_time > 120:
+        if using_ui:
+          update_state(self.board_size, self.num_color, self.choreographer, \
+            self.spoiler, "Choreographer exceeds time limit!", self.get_board(), False)
         print("Choreographer exceeds time limit!")
         self.server.close()
         sys.exit()
@@ -337,6 +346,9 @@ class Game(object):
       move_data += data
 
     print("Receiving all the final state line infos...")
+    if using_ui:
+      update_state(self.board_size, self.num_color, self.choreographer, \
+        self.spoiler, "Receiving all the final state line infos...", self.get_board(), False)
     line_info = ""
     while not line_info:
       line_info = self.server.receive(0)
@@ -366,11 +378,11 @@ class Game(object):
       if not move_success:
         print(msg) # invalid move
         update_state(self.board_size, self.num_color, self.choreographer, \
-          self.spoiler, msg, self.get_board())
+          self.spoiler, msg, self.get_board(), False)
         sys.exit()
       if using_ui:
         update_state(self.board_size, self.num_color, self.choreographer, \
-          self.spoiler, "executing the moves...", self.get_board())
+          self.spoiler, "executing the moves...", self.get_board(), False)
         time.sleep(1)
 
     # parse line_info
@@ -388,13 +400,13 @@ class Game(object):
       print(self.choreographer + " has taken " + str(self.dancer_steps) + " steps.")
       if using_ui:
         update_state(self.board_size, self.num_color, self.choreographer, \
-          self.spoiler, self.choreographer + " has taken " + str(self.dancer_steps) + " steps.", self.get_board())
+          self.spoiler, self.choreographer + " has taken " + str(self.dancer_steps) + " steps.", self.get_board(), False)
     else:
       print("Game finished!")
       print(self.choreographer + " didn't reach the goal.")
       if using_ui:
         update_state(self.board_size, self.num_color, self.choreographer, \
-          self.spoiler, self.choreographer + " didn't reach the goal.", self.get_board())
+          self.spoiler, self.choreographer + " didn't reach the goal.", self.get_board(), False)
 
 def print_usage():
   print("Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>")
