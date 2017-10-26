@@ -41,9 +41,20 @@
             var style = '\'width: ' + width + 'px; '
               + 'height: ' + height + 'px; '
               + 'float: left; background-color: ' + color + ';\'';
-            var elmt = '<div class="tile" style=' + style + '></div>'
+            var elmt = '<div id="' + i + '-' + j + '" class="tile" style=' + style + '></div>'
             $('#board').append(elmt);
           }
+        }
+      }
+
+      function updateTile(row, col, item) {
+        var tile = $('#' + row + '-' + col);
+        if (item == 0) {
+          tile.html(''); // clear
+        } else if (item == -1) {
+          tile.html('#');
+        } else {
+          tile.html(item);
         }
       }
 
@@ -52,23 +63,35 @@
        * {
        *  board_size : int,
        *  num_color : int,
+       *  choreographer : string,
+       *  spoiler : string,
+       *  stage : string,
        *  board: [[]]
        * }
        */
       function updateState(state) {
-
+        // update board first
+        var board = state.board;
+        for (var i=0; i < state.board_size; i++) {
+          for (var j=0; j < state.board_size; j++) {
+            var item = board[i][j]
+            updateTile(i, j, item);
+          }
+        }
       }
 
       $(function() {
         // load socket.io
         var socket = io();
         socket.on('STATE', function(state) {
-          if (!initialized) {
-            initialBoard(state.board_size);
-            initialized = true;
+          if (state) {
+            if (!initialized) {
+              initialBoard(state.board_size);
+              initialized = true;
+            }
+            // update displayed info
+            updateState(state);
           }
-          // update displayed info
-          updateState(state);
         });
       });
     </script>
