@@ -101,14 +101,14 @@ def main():
   client = Client(host, port)
   # send team name
   client.send("SamplePlayer")
-  # receive file data
-  file_data = client.receive()
   # receive other parameters
   parameters = client.receive()
   parameters_l = parameters.split()
   board_size = int(parameters_l[0])
   num_color = int(parameters_l[1])
   k = int(parameters_l[2]) # max num of stars
+  # receive file data
+  file_data = client.receive()
   # process file
   dancers = process_file(file_data) # a set of initial dancers
   # now start to play
