@@ -19,9 +19,12 @@ class Game(object):
     # setup board
     self.board_size = size
     self.num_color = len(self.dancers)
+    self.k = len(self.dancers[0]) # the max number of stars
+    if self.k * (self.num_color + 1) >= self.board_size * self.board_size:
+      print("Invalid board size! It needs to be bigger enough to contain all the dancers and stars!")
+      sys.exit(2)
     self.board = self.__setup_board(self.dancers, size)
     self.stars = set()
-    self.k = len(self.dancers[0]) # the max number of stars
     self.dancer_steps = 0
     # initialize server
     self.server, self.choreographer, self.spoiler = self.__setup_server(host, port)
@@ -56,7 +59,11 @@ class Game(object):
     # fill in all the dancers with their colors
     for index in range(len(dancers)):
       for pos in dancers[index]:
-        board[pos[0]][pos[1]] = index + 1
+        if self.__inside_board(pos[0], pos[1]):
+          board[pos[0]][pos[1]] = index + 1
+        else:
+          print("Initial position " + str(pos[0]) + ", " + str(pos[1]) + " not inside board! Check input file!")
+          sys.exit(2)
     return board
 
   def __inside_board(self, x, y):
