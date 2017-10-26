@@ -3,11 +3,12 @@ import sys, socket, time, os
 from Server import Server
 from copy import deepcopy
 from getopt import getopt
+from ui import update_state
 
 """
-Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>
+Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size> [-u]\n
+use -u to enable frontend
 """
-
 
 class Game(object):
 
@@ -252,7 +253,7 @@ class Game(object):
     """Get the current board"""
     return self.board
 
-  def start_game(self):
+  def start_game(self, using_ui):
     # send input file to both players
     print("Sending input file to both players...")
     self.server.send_all(self.file_input)
@@ -290,6 +291,9 @@ class Game(object):
       self.server.close()
       sys.exit()
     print("Done.")
+    if using_ui:
+      update_state(self.board_size, self.num_color, self.choreographer, \
+        self.spoiler, "Stars added to board.", self.get_board())
 
     # send stars to choreographer
     print("Sending stars to the choreographer...")
@@ -368,8 +372,9 @@ def main():
   port = None
   filename = None
   size = None
+  using_ui = False
   try:
-    opts, args = getopt(sys.argv[1:], "hH:p:f:s:", ["help"])
+    opts, args = getopt(sys.argv[1:], "huH:p:f:s:", ["help"])
   except GetoptError:
     print_usage()
     sys.exit(2)
@@ -385,10 +390,12 @@ def main():
       filename = arg
     elif opt == "-s":
       size = int(arg)
+    elif opt == "-u":
+      using_ui = True
   # initialize game    
   game = Game(host, port, filename, size)
   # run game
-  game.start_game()
+  game.start_game(using_ui)
 
 if __name__ == "__main__":
   main()
