@@ -162,7 +162,7 @@ class Game(object):
           valid_line = False
           break
         if c in colors:
-          print("Duplicate color " + c + " found for line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
+          print("Duplicate color " + str(c) + " found for line (" + str(start_x) + ", " + str(start_y) + ")--(" + str(end_x) + ", " + str(end_y) + ")")
           valid_line = False
           break
         colors.add(c)

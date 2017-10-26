@@ -12,7 +12,7 @@ class Client(object):
 
   def send(self, data):
     """send data to server"""
-    self.socket.send(bytes(data + "&", "utf-8"))
+    self.socket.sendall(bytes(data + "&", "utf-8"))
 
   def receive(self):
     """receive data from server"""
