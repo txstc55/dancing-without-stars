@@ -37,6 +37,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+      var color_list = ['red', 'blue', 'green', 'orange', 'purple', 'chocolate', 'pink', 'yellow'];
       // a flag to show if the board has been initialized
       var initialized = false;
       var timer = false; // timer flag
@@ -63,10 +64,13 @@
         var tile = $('#' + row + '-' + col);
         if (item == 0) {
           tile.html(''); // clear
+          tile.css('color', 'black');
         } else if (item == -1) {
           tile.html('#');
+          tile.css('color', 'black');
         } else {
           tile.html(item);
+          tile.css('color', getColor(item));
         }
       }
 
@@ -105,6 +109,14 @@
       function cleanTimer() {
         $('#timer').html(''); // clear
         $('#timer').css('color', 'black'); // change color back
+      }
+
+      function getColor(color_num) {
+        if (color_num > color_list.length) {
+          return 'black';
+        } else {
+          return color_list[color_num - 1];
+        }
       }
 
       /**
