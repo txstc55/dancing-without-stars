@@ -334,7 +334,7 @@ class Game(object):
       update_state(self.board_size, self.num_color, self.choreographer, \
         self.spoiler, "Receiving moves from choreographer...", self.get_board(), True)
     start_time = time.time()
-    move_data = ""
+    move_data = list()
     while True:
       if time.time() - start_time > 120:
         if using_ui:
@@ -350,7 +350,7 @@ class Game(object):
       print(data)
       if data == "DONE": # received DONE flag
         break
-      move_data += data
+      move_data += data.split()
 
     print("Receiving all the final state line infos...")
     if using_ui:
@@ -364,17 +364,16 @@ class Game(object):
     self.server.close()
 
     # parse move data
-    md_l = move_data.split()
     steps = list()
-    while len(md_l) != 0:
+    while len(move_data) != 0:
       # get the move count
-      c = int(md_l.pop(0))
+      c = int(move_data.pop(0))
       moves = list()
       for i in range(c):
-        x1 = md_l.pop(0)
-        y1 = md_l.pop(0)
-        x2 = md_l.pop(0)
-        y2 = md_l.pop(0)
+        x1 = move_data.pop(0)
+        y1 = move_data.pop(0)
+        x2 = move_data.pop(0)
+        y2 = move_data.pop(0)
         moves.append([int(x1), int(y1), int(x2), int(y2)])
       steps.append(moves)
     
