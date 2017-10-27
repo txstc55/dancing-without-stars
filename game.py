@@ -116,10 +116,6 @@ class Game(object):
     elif self.board[start_x][start_y] in (0, -1):
       print("no dancer at this start location")
       return False # no dancer at this location
-    # check if start == end
-    elif start_x == end_x and start_y == end_y:
-      print("no movement at all")
-      return False # no movement at all
     # check if the dancer will move to a star
     elif self.board[end_x][end_y] == -1:
       print("There is a star at end location")
