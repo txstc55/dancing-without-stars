@@ -250,7 +250,7 @@ class Game(object):
         # update self.dancers
         color = self.board[x1][y1]
         self.dancers[color-1].remove((x1, y1))
-        self.dancers[color-1].add((x2, y2))
+        self.dancers[color-1].append((x2, y2))
         # update tmp_board
         tmp_board[x1][y1].remove(color)
         tmp_board[x2][y2].append(color)
