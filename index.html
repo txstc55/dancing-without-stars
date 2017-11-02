@@ -132,6 +132,9 @@
        * }
        */
       function updateState(state) {
+        // set names
+        $('#chore').html(state.choreographer);
+        $('#spoi').html(state.spoiler);
         // update board first
         var board = state.board;
         for (var i=0; i < state.board_size; i++) {
@@ -158,9 +161,6 @@
           if (state) {
             if (!initialized) {
               initialBoard(state.board_size);
-              // set names
-              $('#chore').html(state.choreographer);
-              $('#spoi').html(state.spoiler);
               initialized = true;
             }
             // update displayed info
