@@ -6,6 +6,7 @@ class Server(object):
   def __init__(self, host, port):
     """Init the server, set two sockets for players"""
     self.cache = [list(), list()]
+    self.data = ""
     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.socket.bind((host, port))
@@ -39,14 +40,13 @@ class Server(object):
     if len(self.cache[player]) > 0:
       return self.cache[player].pop(0)
     else:
-      # keep receive until the last char is '&'
-      data = ""
-      while True:
-        data += self.sockets[player].recv(4096).decode("utf-8")
-        if len(data) > 0 and data[-1] == "&":
-          break
-      self.cache[player] += list(filter(None, data.split("&")))
-      return self.cache[player].pop(0)
+      self.data += self.sockets[player].recv(4096).decode("utf-8")
+      if len(self.data) > 0 and self.data[-1] == "&":
+        self.cache[player] += list(filter(None, self.data.split("&")))
+        self.data = ""
+        return self.cache[player].pop(0)
+      else:
+        return ""
 
   def close(self):
     self.socket.close()
