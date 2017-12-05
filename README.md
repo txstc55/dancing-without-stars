@@ -1,6 +1,8 @@
 Dancing without Stars
 =====================
 
+> Here is human playable implementation <https://github.com/billg1990/dancing-without-stars-webgame>
+
 ## Details
 On a `N x N` checker board, there are `c` groups of dancers in their initial positions. Each group will have a unique color and each group have `k` dancers.  
 
