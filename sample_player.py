@@ -24,6 +24,7 @@ def get_args():
 	host = None
 	port = None
 	player = None
+	name = "iDoNTeVenKNowmYName"
 	try:
 		opts, args = getopt(sys.argv[1:], "hcsH:p:", ["help"])
 	except GetoptError:
@@ -41,10 +42,12 @@ def get_args():
 			player = "c"
 		elif opt == "-s":
 			player = "s"
+		elif opt == '-n':
+			name = arg
 	if host is None or port is None or player is None:
 		print_usage()
 		sys.exit(2)
-	return host, port, player
+	return host, port, player, name
 
 # TODO add your method here
 def get_stars(dancers, k, board_size, num_color):
@@ -96,11 +99,11 @@ def get_a_move(dancers, stars, k, board_size, num_color):
 	return "5 " + move
 
 def main():
-	host, port, player = get_args()
+	host, port, player, name = get_args()
 	# create client
 	client = Client(host, port)
 	# send team name
-	client.send("SamplePlayer")
+	client.send(name)
 	# receive other parameters
 	parameters = client.receive()
 	parameters_l = parameters.split()
