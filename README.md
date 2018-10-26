@@ -76,11 +76,11 @@ Where `size` means the board size.
 ## Run the sample player
 For Choreographer
 ```bash
-python3 sample_player.py -H <host> -p <port> -c
+python3 sample_player.py -H <host> -p <port> -c -n <name>
 ```
 For spoiler
 ```bash
-python3 sample_player.py -H <host> -p <port> -s
+python3 sample_player.py -H <host> -p <port> -s -n <name>
 ```
 
 Both uses randomized methods, so sample choreographer can hardly reach the goal.
