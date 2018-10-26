@@ -9,12 +9,18 @@ python3 sample_player.py -H <host> -p <port> <-c|-s>
 
 def process_file(file_data):
 	"""read in input file"""
-	dancers = set()
+	dancers = {}
+	latest_color = 0
+	dancer_id = -1
+
 	f = file_data.split("\n")
 	for line in f:
 		tokens = line.split()
 		if len(tokens) == 2:
-			dancers.add((int(tokens[0]), int(tokens[1])))
+			dancer_id+=1
+			dancers[dancer_id] = (int(tokens[0]), int(tokens[1]), latest_color)
+		elif len(tokens)>2:
+			latest_color+=1
 	return dancers
 
 def print_usage():
