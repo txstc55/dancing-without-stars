@@ -78,10 +78,12 @@ Where `size` means the board size and `filename` means the files in `sample_danc
 
 ## Run the sample player
 For Choreographer
-```python3 sample_player.py -H <host> -p <port> -c
+```bash
+python3 sample_player.py -H <host> -p <port> -c
 ```
 For spoiler
-```python3 sample_player.py -H <host> -p <port> -s
+```bash
+python3 sample_player.py -H <host> -p <port> -s
 ```
 
 Both uses randomized methods, so sample choreographer can hardly reach the goal.
@@ -95,13 +97,16 @@ If no one made any invalid move then the one choreographer who uses fewer steps 
 ## Graphic Interface
 In order to run UI display, you need to install some requirements.  
 First install node dependencies:
-```npm install
+```bash
+npm install
 ```
 Then install one python dependency:
-```pip install requests
+```bash
+pip install requests
 ```
 Now you can run the node server using:
-```node index.js
+```bash
+node index.js
 ```
 And go to `127.0.0.1:3000` in your browser. I hardcoded the ip and port...  
 Then start the game as normal except adding one more option `-u` at the end.  
