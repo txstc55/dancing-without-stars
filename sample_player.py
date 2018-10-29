@@ -1,36 +1,35 @@
 #!/usr/bin/python
 import sys, random
+from copy import deepcopy
 from client import Client
 from getopt import getopt, GetoptError
 
 """
 python3 sample_player.py -H <host> -p <port> <-c|-s>
 """
-
 def process_file(file_data):
 	"""read in input file"""
 	dancers = {}
-	latest_color = 0
 	dancer_id = -1
-
 	f = file_data.split("\n")
 	for line in f:
+		print(line)
 		tokens = line.split()
 		if len(tokens) == 2:
 			dancer_id+=1
 			dancers[dancer_id] = (int(tokens[0]), int(tokens[1]), latest_color)
 		elif len(tokens)>2:
-			latest_color+=1
+			latest_color = int(tokens[-1])
 	return dancers
 
 def print_usage():
-	print("Usage: python3 sample_player.py -H <host> -p <port>")
+	print("Usage: python3 sample_player.py -H <host> -p <port> [-c/-s]")
 
 def get_args():
 	host = None
 	port = None
 	player = None
-	name = "iDoNTeVenKNowmYName"
+	name = "MY TEAM NAME"
 	try:
 		opts, args = getopt(sys.argv[1:], "hcsH:p:", ["help"])
 	except GetoptError:
@@ -48,64 +47,83 @@ def get_args():
 			player = "c"
 		elif opt == "-s":
 			player = "s"
-		elif opt == '-n':
-			name = arg
 	if host is None or port is None or player is None:
 		print_usage()
 		sys.exit(2)
 	return host, port, player, name
 
-# TODO add your method here
-def get_stars(dancers, k, board_size, num_color):
-	stars = set()
-	x = -1
-	y = -1
-	while len(stars) < k:
-		x = random.randint(0, board_size - 1)
-		y = random.randint(0, board_size - 1)
-		if (x, y) not in dancers and (x, y) not in stars:
-			# check manhattan distance with other stars
-			ok_to_add = True
-			for s in stars:
-				if abs(x - s[0]) + abs(y - s[1]) < num_color + 1:
-					ok_to_add = False
-					break
-			if ok_to_add:
-				stars.add((x, y))
+def get_buffer_stars(stars):
 	stars_str = ""
 	for s in stars:
 		stars_str += (str(s[0]) + " " + str(s[1]) + " ")
 	return stars_str
 
-# TODO add your method here
-def get_a_move(dancers, stars, k, board_size, num_color):
-	# pick 5 random dancers from dancers
-	count = 0
-	moved = set()
-	move = ""
-	while count < 5:
-		# pick random dancers
-		picked = random.sample(dancers, 5 - count)
-		for d in picked:
-			x, y = d[0], d[1]
-			if (x, y) in moved:
-				continue
-			c = random.sample([(1, 0), (-1, 0), (0, 1), (0, -1)], 1)[0]
-			x2 = x + c[0]
-			y2 = y + c[1]
-			if (x2, y2) in dancers or (x2, y2) in stars:
-				continue
-			if x2 not in range(board_size) or y2 not in range(board_size):
-				continue
-			move += (str(x) + " " + str(y) + " " + str(x2) + " " + str(y2) + " ")
-			dancers.remove((x, y))
-			dancers.add((x2, y2))
-			moved.add((x2, y2))
-			count += 1
-	return "5 " + move
+class Player:
+	def __init__(self, board_size, num_color, k, dancers):
+		self.board_size = board_size
+		self.num_color = num_color
+		self.k = k
+		self.dancers = dancers
+
+	# TODO add your method here
+	def get_stars(self):
+		stars = []
+		x = -1
+		y = -1
+		occupied = set()
+		for id in self.dancers:
+			occupied.add((self.dancers[id][0], self.dancers[id][1]))
+		while len(stars) < self.k:
+			x = random.randint(0, self.board_size - 1)
+			y = random.randint(0, self.board_size - 1)
+			if (x, y) not in occupied:
+				# check manhattan distance with other stars
+				ok_to_add = True
+				for s in stars:
+					if abs(x - s[0]) + abs(y - s[1]) < self.num_color + 1:
+						ok_to_add = False
+						break
+				if ok_to_add:
+					stars.append((x, y))
+					occupied.add((x, y))
+		return stars
+
+	# TODO add your method here
+	def get_moves(self, stars):
+		# pick 5 random dancers from dancers
+		moves = []
+		occupied = set()
+		for id in self.dancers:
+			occupied.add((self.dancers[id][0], self.dancers[id][1]))
+		for star in stars:
+			occupied.add(star)
+		for i in range(100): # do 20 turns, each turn pick 5 random dancers
+			move = {}
+			count = 0
+			while count < 5:
+				# pick random dancers
+				picked = random.sample(self.dancers.keys(), 5 - count)
+				for id in picked:
+					x, y, color = self.dancers[id]
+					if id in move:
+						continue
+					c = random.sample([(1, 0), (-1, 0), (0, 1), (0, -1)], 1)[0]
+					x2 = x + c[0]
+					y2 = y + c[1]
+					if (x2, y2) in occupied:
+						continue
+					if x2 not in range(self.board_size) or y2 not in range(self.board_size):
+						continue
+					move[id] = (x2, y2)
+					self.dancers[id] = ((x2, y2, self.dancers[id][2]))
+					occupied.remove((x, y))
+					occupied.add((x2, y2))
+					count += 1
+			moves.append(move)
+		return moves
 
 def main():
-	host, port, player, name = get_args()
+	host, port, p, name = get_args()
 	# create client
 	client = Client(host, port)
 	# send team name
@@ -120,29 +138,40 @@ def main():
 	file_data = client.receive()
 	# process file
 	dancers = process_file(file_data) # a set of initial dancers
+	__dancers = deepcopy(dancers)
+	player = Player(board_size, num_color, k, dancers)
 	# now start to play
-	if player == "s":
-		# TODO modify here
-		stars = get_stars(dancers, k, board_size, num_color)
+	if p == "s":
+		print("Making stars")
+		stars = player.get_stars()
 		print(stars)
 		# send stars
-		client.send(stars)
+		client.send(get_buffer_stars(stars))
 	else: # choreographer
-		# TODO modify here
 		# receive stars from server
 		stars_str = client.receive()
 		stars_str_l = stars_str.split()
-		stars = set()
+		stars = []
 		for i in range(int(len(stars_str_l)/2)):
-			stars.add((int(stars_str_l[2*i]), int(stars_str_l[2*i+1])))
-		for i in range(0, 1000): # send a thousand random moves
-			move = get_a_move(dancers, stars, k, board_size, num_color)
+			stars.append((int(stars_str_l[2*i]), int(stars_str_l[2*i+1])))
+
+		moves = player.get_moves(stars)
+		for move in moves: # iterate through all the moves
 			print(move)
-			client.send(move)
+			move_str = str(len(move))
+			for id in move: # for each dancer id in this move
+				x, y, color = __dancers[id]
+				nx, ny = move[id]
+				move_str += " " + str(x) + " " + str(y) + " " + str(nx) + " " + str(ny)
+				__dancers[id] = (nx, ny, 0)
+
+			client.send(move_str)
+
 		# send DONE flag
 		client.send("DONE")
-		# send a random line
-		random_dancer = random.sample(dancers, 1)[0]
+		# send a line to signal the server to stop
+		rid = random.sample(__dancers.keys(), 1)[0]
+		random_dancer = __dancers[rid]
 		client.send(str(random_dancer[0]) + " " + str(random_dancer[1]) + " " + str(random_dancer[0]) + " " + str(random_dancer[1] + 4))
 
 	# close connection
