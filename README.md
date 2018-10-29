@@ -76,7 +76,7 @@ python3 game.py -H <host> -p <port> -f <filename> -s <size>
 ```  
 Where `size` means the board size and `filename` means the files in `sample_dancedata` folder
 
-## Run the sample player
+## Run the sample player. REMEMBER TO ALWAYS RUN Choreographer FIRST
 For Choreographer
 ```bash
 python3 sample_player.py -H <host> -p <port> -c
