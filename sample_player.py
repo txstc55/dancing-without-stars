@@ -29,7 +29,13 @@ def get_args():
 	host = None
 	port = None
 	player = None
+	##########################################
+	#PLEASE ADD YOUR TEAM NAME#
+	##########################################
 	name = "MY TEAM NAME"
+	##########################################
+	#PLEASE ADD YOUR TEAM NAME#
+	##########################################
 	try:
 		opts, args = getopt(sys.argv[1:], "hcsH:p:", ["help"])
 	except GetoptError:
@@ -62,11 +68,23 @@ class Player:
 	def __init__(self, board_size, num_color, k, dancers):
 		self.board_size = board_size
 		self.num_color = num_color
+		# k dancers for each color
 		self.k = k
+		# self.dancers is a dictionary with key as the id of the dancers
+		# with value as the tuple of 3 (x, y, c)
+		# where (x,y) is initial position of dancer
+		# c is the color id of the dancer
 		self.dancers = dancers
 
 	# TODO add your method here
+	# Add your stars as a spoiler
 	def get_stars(self):
+		#
+		#
+		# You need to return a list of coordinates representing stars
+		# Each coordinate is a tuple of 2 values (x, y)
+		#
+		#
 		stars = []
 		x = -1
 		y = -1
@@ -89,7 +107,16 @@ class Player:
 		return stars
 
 	# TODO add your method here
+	# Add your moves as a choreographer
 	def get_moves(self, stars):
+		#
+		#
+		# You need to return a list of moves from the beginning to the end of the game
+		# Each move is a dictionary with key as the id of the dancer you want to move
+		# with value as a tuple of 2 values (x, y) representing the new position of the dancer
+		#
+		#
+
 		# pick 5 random dancers from dancers
 		moves = []
 		occupied = set()

@@ -1,7 +1,7 @@
 Dancing without Stars
 =====================
-
-> Here is human playable implementation <https://github.com/billg1990/dancing-without-stars-webgame>
+This implementation of the architecture for NYU Heuristics Fall 2018.
+Adapted from the implementation provided by <https://github.com/billg1990/dancing-without-stars>
 
 ## Details
 On a `N x N` checker board, there are `c` groups of dancers in their initial positions. Each group will have a unique color and each group have `k` dancers.  
@@ -10,7 +10,7 @@ The choreographer is going to ask the dancers to make moves. The goal of the cho
 
 For example, there are color `1`, `2`, `3`, `4`, and `k = 3`, then the following is a valid final state:
 ```
-1234  2 
+1234  2
       1
   42133
       4
@@ -22,7 +22,7 @@ The spoiler is going to place `k` stars on the board before choreographer starts
 
 Both players will have `120` seconds as thinking time.
 
-## Choreographer
+## For your own Choreographer's client
 Choreographer will connect to server first and send their name to the server.  
 Server will send an `input_file` to choreographer. An `input_file` is similiar to `sample_dancedata.txt`.  
 
@@ -45,7 +45,7 @@ The last step for Choreographer is to send all the lines to the server in the fo
 
 The clock will stop counting once you sent "DONE" to server, but server will validate if line info matches steps later.
 
-## Spoiler
+## For your own Spoiler's client
 Spoiler will be the second to connect to the server and send their name to the server.  
 Server will send the `input_file` such like `sample_dancedata.txt` to the spoiler first.  
 
@@ -61,26 +61,27 @@ Manhattan distance: `|x1 - x2| + |y1 - y2|`.
 
 And then spoiler can rest.
 
-## IMPORTANT NOTE If you are making your own client
+## IMPORTANT NOTE If you are making your own client for either above
 Every time when you send something to server, make sure to append an `&` to the end of your string.  
 This means the end of some data to the server.  
 
 And when server send something back, it will have an `&` at the end too. Make sure to handle that.  
 
+## If not, there is a python client in "sample_player.py"
+
+
 ## Run the server
 ```bash
 python3 game.py -H <host> -p <port> -f <filename> -s <size>
 ```  
-Where `size` means the board size.
+Where `size` means the board size and `filename` means the files in `sample_dancedata` folder
 
 ## Run the sample player
 For Choreographer
-```bash
-python3 sample_player.py -H <host> -p <port> -c -n <name>
+```python3 sample_player.py -H <host> -p <port> -c
 ```
 For spoiler
-```bash
-python3 sample_player.py -H <host> -p <port> -s -n <name>
+```python3 sample_player.py -H <host> -p <port> -s
 ```
 
 Both uses randomized methods, so sample choreographer can hardly reach the goal.
@@ -94,16 +95,13 @@ If no one made any invalid move then the one choreographer who uses fewer steps 
 ## Graphic Interface
 In order to run UI display, you need to install some requirements.  
 First install node dependencies:
-```bash
-npm install
+```npm install
 ```
 Then install one python dependency:
-```bash
-pip install requests
+```pip install requests
 ```
 Now you can run the node server using:
-```bash
-node index.js
+```node index.js
 ```
 And go to `127.0.0.1:3000` in your browser. I hardcoded the ip and port...  
 Then start the game as normal except adding one more option `-u` at the end.  
@@ -112,4 +110,4 @@ With display mode, executing/validating move stage will run a bit slower so that
 
 ## Contact
 Let me know if there is any bugs or problems.  
-`taikun@nyu.edu`
+`alm818@nyu.edu`
