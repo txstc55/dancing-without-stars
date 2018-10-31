@@ -75,6 +75,7 @@ And when server send something back, it will have an `&` at the end too. Make su
 python3 game.py -H <host> -p <port> -f <filename> -s <size>
 ```  
 Where `size` means the board size and `filename` means the files in `sample_dancedata` folder
+`size` is at most 50. Please don't run more than 50x50 because the GUI be freezing when loading a big board size
 
 ## Run the sample player. REMEMBER TO ALWAYS RUN Choreographer FIRST
 For Choreographer
