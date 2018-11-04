@@ -190,7 +190,7 @@ def main():
 				x, y, color = __dancers[id]
 				nx, ny = move[id]
 				move_str += " " + str(x) + " " + str(y) + " " + str(nx) + " " + str(ny)
-				__dancers[dancer_id] = (nx, ny, color)
+				__dancers[id] = (nx, ny, color)
 
 			client.send(move_str)
 
