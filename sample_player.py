@@ -190,7 +190,7 @@ def main():
 				x, y, color = __dancers[id]
 				nx, ny = move[id]
 				move_str += " " + str(x) + " " + str(y) + " " + str(nx) + " " + str(ny)
-				__dancers[id] = (nx, ny, 0)
+                __dancers[dancer_id] = (nx, ny, color)
 
 			client.send(move_str)
 
@@ -202,9 +202,9 @@ def main():
 	client.close()
 
 def getLines(num_color, dancers):
-    nonvis = set()
+    nonvis = {}
     for x,y,c in dancers.values():
-        nonvis.add((x, y))
+        nonvis[(x, y)] = c
     lines = []
     dx = [1, -1, 0, 0]
     dy = [0, 0, 1, -1]
@@ -229,11 +229,16 @@ def getLines(num_color, dancers):
                 ny = y + dy[dir]*(num_color-1)
                 if (nx, ny) not in endpoints and (x,y) not in endpoints:
                     isGood = True
+                    colors = set()
                     for cc in range(num_color):
                         ix = x + dx[dir]*cc
                         iy = y + dy[dir]*cc
                         if (ix, iy) not in nonvis:
                             isGood = False
+                        else:
+                            colors.add(nonvis[(ix, iy)])
+                    if len(colors) != num_color:
+                        isGood = False
                     if isGood:
                         endpoints.add((nx, ny))
                         endpoints.add((x, y))
@@ -245,7 +250,7 @@ def getLines(num_color, dancers):
         if len(removing) == 0:
             break
         for x,y in removing:
-            nonvis.remove((x, y))
+            del nonvis[(x,y)]
     res = ""
     for line in lines:
         for coor in line:
