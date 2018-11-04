@@ -196,7 +196,7 @@ def main():
 
 		# send DONE flag
 		client.send("DONE")
-        client.send(getLines(num_color, __dancers))
+		client.send(getLines(num_color, __dancers))
 
 	# close connection
 	client.close()
