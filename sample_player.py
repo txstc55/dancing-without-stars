@@ -196,13 +196,61 @@ def main():
 
 		# send DONE flag
 		client.send("DONE")
-		# send a line to signal the server to stop
-		rid = random.sample(__dancers.keys(), 1)[0]
-		random_dancer = __dancers[rid]
-		client.send(str(random_dancer[0]) + " " + str(random_dancer[1]) + " " + str(random_dancer[0]) + " " + str(random_dancer[1] + 4))
+        client.send(getLines(num_color, __dancers))
 
 	# close connection
 	client.close()
+
+def getLines(num_color, dancers):
+    nonvis = set()
+    for x,y,c in dancers.values():
+        nonvis.add((x, y))
+    lines = []
+    dx = [1, -1, 0, 0]
+    dy = [0, 0, 1, -1]
+    while True:
+        if len(nonvis) == 0:
+            break
+        removing = set()
+        endpoints = set()
+        for x, y in nonvis:
+            cnt = 0
+            dir = -1
+            for i in range(4):
+                xx = x + dx[i]
+                yy = y + dy[i]
+                if (xx, yy) in nonvis:
+                    cnt += 1
+                    dir = i
+            if cnt == 0:
+                return [[0, 0, 0, 0]]
+            elif cnt == 1:
+                nx = x + dx[dir]*(num_color-1)
+                ny = y + dy[dir]*(num_color-1)
+                if (nx, ny) not in endpoints and (x,y) not in endpoints:
+                    isGood = True
+                    for cc in range(num_color):
+                        ix = x + dx[dir]*cc
+                        iy = y + dy[dir]*cc
+                        if (ix, iy) not in nonvis:
+                            isGood = False
+                    if isGood:
+                        endpoints.add((nx, ny))
+                        endpoints.add((x, y))
+                        lines.append((x, y, nx, ny))
+                        for cc in range(num_color):
+                            ix = x + dx[dir]*cc
+                            iy = y + dy[dir]*cc
+                            removing.add((ix, iy))
+        if len(removing) == 0:
+            break
+        for x,y in removing:
+            nonvis.remove((x, y))
+    res = ""
+    for line in lines:
+        for coor in line:
+            res += str(coor) + " "
+    return res
 
 if __name__ == "__main__":
 	main()
