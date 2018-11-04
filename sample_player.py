@@ -223,7 +223,7 @@ def getLines(num_color, dancers):
 					cnt += 1
 					dir = i
 			if cnt == 0:
-				return [[0, 0, 0, 0]]
+				return "0 0 0 0"
 			elif cnt == 1:
 				nx = x + dx[dir]*(num_color-1)
 				ny = y + dy[dir]*(num_color-1)
@@ -251,6 +251,8 @@ def getLines(num_color, dancers):
 			break
 		for x,y in removing:
 			del nonvis[(x,y)]
+	if len(lines) == 0:
+		return "0 0 0 0"
 	res = ""
 	for line in lines:
 		for coor in line:
