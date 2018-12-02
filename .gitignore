@@ -4,3 +4,5 @@ __pycache__/
 .DS_Store
 backup.py
 client_so_far.py
+players/
+*.jar

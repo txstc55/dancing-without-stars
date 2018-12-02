@@ -106,6 +106,7 @@ class Game(object):
 		3. dancer cannot move to a position outside the board
 		"""
 		if self.__manhattan_distance(start_x, start_y, end_x, end_y) > 1:
+			print("Dancer intending to move from ", [start_x, start_y], "to", [end_x, end_y])
 			print("Dancer can only move 1 row-wise or col-wise")
 			return False
 		# check if both positions are inside the board
@@ -427,10 +428,11 @@ class Game(object):
 					self.spoiler, self.choreographer + " has taken " + str(self.dancer_steps) + " steps.", self.get_board(), False)
 		else:
 			print("Game finished!")
+			print(self.choreographer + " has taken " + str(self.dancer_steps) + " steps.")
 			print(self.choreographer + " didn't reach the goal.")
 			if using_ui:
 				update_state(self.board_size, self.num_color, self.choreographer, \
-					self.spoiler, self.choreographer + " didn't reach the goal.", self.get_board(), False)
+					self.spoiler, self.choreographer + " has taken " + str(self.dancer_steps) + " steps.", self.get_board(), False)
 
 def print_usage():
 	print("Usage: python3 game.py -H <host> -p <port> -f <filename> -s <size>")
